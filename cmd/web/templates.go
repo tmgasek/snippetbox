@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
 	"snippetbox.tmgasek.net/internal/models"
 )
@@ -11,6 +12,16 @@ type templateData struct {
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
 	CurrentYear int
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+// init empty funcMap obj and store it in a global var. String keyed map acting
+// as a lookup between the names of custom template funcs and actual funcs
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 // only parse files once when app starts, then store the parsed templates in
@@ -31,7 +42,8 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		name := filepath.Base(page)
 
 		// parse base template into a template set
-		ts, err := template.ParseFiles("./ui/html/base.html")
+
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.html")
 		if err != nil {
 			return nil, err
 		}

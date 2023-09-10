@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // write error msg and stack trace to errorLog, send generic 500 res to user
@@ -58,4 +59,11 @@ func (app *application) render(
 	w.WriteHeader(status)
 
 	buf.WriteTo(w)
+}
+
+// returns pointer to templateData struct inited with curr year.
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
