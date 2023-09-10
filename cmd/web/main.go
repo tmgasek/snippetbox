@@ -64,6 +64,7 @@ func main() {
 }
 
 // Returns a sql.DB conn pool for a given DSN
+
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
