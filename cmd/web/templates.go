@@ -2,10 +2,12 @@ package main
 
 import (
 	"html/template"
+	"io/fs"
 	"path/filepath"
 	"time"
 
 	"snippetbox.tmgasek.net/internal/models"
+	"snippetbox.tmgasek.net/ui"
 )
 
 type templateData struct {
@@ -35,38 +37,27 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	// init new map to act as the cache
 	cache := map[string]*template.Template{}
 
-	// get slice of all filepaths that match "./ui/html/pages/*.html"
-	pages, err := filepath.Glob("./ui/html/pages/*.html")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.html")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, page := range pages {
-		// extract file name ("home.html") from full filepath
 		name := filepath.Base(page)
 
-		// parse base template into a template set
+		// Filepath patterns for the templates we want to parse.
+		patterns := []string{
+			"html/base.html",
+			"html/partials/*.html",
+			page,
+		}
 
-		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.html")
+		// Parse template files from ui.Files embedded filesystem
+		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
 		}
 
-		// progressively add more templates to the same template set
-
-		// call Parse glob on this ts to add any partials
-		ts, err = ts.ParseGlob("./ui/html/partials/*.html")
-		if err != nil {
-			return nil, err
-		}
-
-		// call parse files on this ts to add the page template
-		ts, err = ts.ParseFiles(page)
-		if err != nil {
-			return nil, err
-		}
-
-		// add template to map using name of the page as key ("home.html")
 		cache[name] = ts
 	}
 
